@@ -71,8 +71,9 @@ def add_visit(visit: Visit):
 class CreateUserRequest(BaseModel):
     email: str
     password: str
+    name: str       # 👈 Add this
     role: str
-    admin_token: str  # simple security
+    admin_token: str
 
 @app.post("/create-user")
 def create_user(req: CreateUserRequest):
@@ -104,6 +105,7 @@ def create_user(req: CreateUserRequest):
     }
     data = {
         "email": req.email,
+        "full_name": req.name,   # 👈 This line is the fix
         "role": req.role
     }
 
