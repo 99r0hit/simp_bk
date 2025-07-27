@@ -22,8 +22,7 @@ app.add_middleware(
 url: str = os.getenv("SUPABASE_URL")
 key: str = os.getenv("SUPABASE_SERVICE_ROLE")
 supabase: Client = create_client(url, key)
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
 
 
 @app.get("/")
