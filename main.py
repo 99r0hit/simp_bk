@@ -24,7 +24,6 @@ key: str = os.getenv("SUPABASE_SERVICE_ROLE")
 supabase: Client = create_client(url, key)
 
 
-
 @app.get("/")
 def root():
     return {"message": "Backend running"}
@@ -76,14 +75,12 @@ class CreateUserRequest(BaseModel):
 
 @app.post("/create-user")
 def create_user(req: CreateUserRequest):
-    # 🔒 Very basic admin check
     if req.admin_token != "letmeinadmin":
         return {"error": "Unauthorized"}
 
-    # Step 1: Create auth user
-    auth_url = f"{SUPABASE_URL}/auth/v1/admin/users"
+    auth_url = f"{url}/auth/v1/admin/users"
     headers = {
-        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE}",
+        "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
     }
     payload = {
@@ -96,11 +93,10 @@ def create_user(req: CreateUserRequest):
     if auth_res.status_code != 200:
         return {"error": "Failed to create auth user", "details": auth_res.json()}
 
-    # Step 2: Insert into users table
-    insert_url = f"{SUPABASE_URL}/rest/v1/users"
+    insert_url = f"{url}/rest/v1/users"
     insert_headers = {
-        "apikey": SUPABASE_SERVICE_ROLE,
-        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE}",
+        "apikey": key,
+        "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
         "Prefer": "return=minimal"
     }
