@@ -81,6 +81,7 @@ def create_user(req: CreateUserRequest):
 
     auth_url = f"{url}/auth/v1/admin/users"
     headers = {
+        "apikey": SUPABASE_SERVICE_ROLE,
         "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
     }
