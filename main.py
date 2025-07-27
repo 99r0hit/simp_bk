@@ -19,5 +19,5 @@ def read_root():
 @app.get("/semiconductor-info")
 def get_info():
     return {
-        "text": "Semiconductors are the foundation of modern electronics and computing."
+        "text": "Semiconductors are the foundation of modern electronics and computing. testing it"
     }
