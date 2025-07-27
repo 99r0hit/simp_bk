@@ -18,8 +18,8 @@ app.add_middleware(
 )
 
 # Supabase setup
-url: str = os.getenv("https://dcfeelpeinfnmiypywgp.supabase.co")
-key: str = os.getenv("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjZmVlbHBlaW5mbm1peXB5d2dwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzYxMTgyNCwiZXhwIjoyMDY5MTg3ODI0fQ.rJRGr2zzAtdeFFRYZS4G-_kUhPjjy5hncDNXxrlvayE")
+url: str = os.getenv("SUPABASE_URL")
+key: str = os.getenv("SUPABASE_SERVICE_ROLE")
 supabase: Client = create_client(url, key)
 
 @app.get("/")
