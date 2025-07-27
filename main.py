@@ -65,3 +65,50 @@ def add_visit(visit: Visit):
     }
     response = supabase.table("visits").insert(data).execute()
     return {"status": "success", "data": response.data}
+
+class CreateUserRequest(BaseModel):
+    email: str
+    password: str
+    role: str
+    admin_token: str  # simple security
+
+@app.post("/create-user")
+def create_user(req: CreateUserRequest):
+    # 🔒 Very basic admin check
+    if req.admin_token != "letmeinadmin":
+        return {"error": "Unauthorized"}
+
+    # Step 1: Create auth user
+    auth_url = f"{SUPABASE_URL}/auth/v1/admin/users"
+    headers = {
+        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "email": req.email,
+        "password": req.password,
+        "email_confirm": True
+    }
+
+    auth_res = requests.post(auth_url, json=payload, headers=headers)
+    if auth_res.status_code != 200:
+        return {"error": "Failed to create auth user", "details": auth_res.json()}
+
+    # Step 2: Insert into users table
+    insert_url = f"{SUPABASE_URL}/rest/v1/users"
+    insert_headers = {
+        "apikey": SUPABASE_SERVICE_ROLE,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE}",
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal"
+    }
+    data = {
+        "email": req.email,
+        "role": req.role
+    }
+
+    insert_res = requests.post(insert_url, json=data, headers=insert_headers)
+    if insert_res.status_code != 201:
+        return {"error": "Failed to insert into users table", "details": insert_res.text}
+
+    return {"success": True}
