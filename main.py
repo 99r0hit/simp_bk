@@ -90,6 +90,7 @@ def create_user(req: CreateUserRequest):
     payload = {
         "email": req.email,
         "password": req.password,
+        "name": req.name,
         "email_confirm": True
     }
 
