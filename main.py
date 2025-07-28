@@ -108,7 +108,8 @@ def create_user(req: CreateUserRequest):
     data = {
         "id": user_id,  # assuming your users table has a 'id' column as FK
         "email": req.email,
-        "role": req.role
+        "role": req.role,
+        "name": req.name,
     }
 
     insert_res = requests.post(insert_url, json=data, headers=insert_headers)
