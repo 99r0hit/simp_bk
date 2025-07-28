@@ -80,6 +80,7 @@ def create_user(req: CreateUserRequest):
     if req.admin_token != "letmeinadmin":
         return {"error": "Unauthorized"}
 
+    # Step 1: Create auth user
     auth_url = f"{url}/auth/v1/admin/users"
     headers = {
         "apikey": key,
@@ -96,16 +97,16 @@ def create_user(req: CreateUserRequest):
     if auth_res.status_code != 200:
         return {"error": "Failed to create auth user", "details": auth_res.json()}
 
+    user_id = auth_res.json().get("user", {}).get("id")
+
+    # Step 2: Insert into your users table with UID
     insert_url = f"{url}/rest/v1/users"
-    insert_headers = {
-        "apikey": key,
-        "Authorization": f"Bearer {key}",
-        "Content-Type": "application/json",
-        "Prefer": "return=minimal"
-    }
+    insert_headers = headers.copy()
+    insert_headers["Prefer"] = "return=minimal"
+
     data = {
+        "id": user_id,  # assuming your users table has a 'id' column as FK
         "email": req.email,
-        "full_name": req.name,   # 👈 This line is the fix
         "role": req.role
     }
 
@@ -114,3 +115,4 @@ def create_user(req: CreateUserRequest):
         return {"error": "Failed to insert into users table", "details": insert_res.text}
 
     return {"success": True}
+
