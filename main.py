@@ -83,7 +83,48 @@ async def login(request: LoginRequest):
     else:
         return {"success": False, "message": "Invalid credentials"}
 
+@app.post("/opportunity")
+def create_opportunity(data: dict, user_id: str = Depends(get_current_user)):
+    supabase.table("opportunities").insert({
+        "user_id": user_id,
+        "customer": data["customer"],
+        "description": data["description"],
+        "notes": data["notes"],
+        "stage": data["stage"]
+    }).execute()
+    return {"message": "Opportunity created"}
 
+
+@app.put("/opportunity/{id}")
+def update_opportunity(id: str, data: dict, user_id: str = Depends(get_current_user)):
+    supabase.table("opportunities").update(data).eq("id", id).eq("user_id", user_id).execute()
+    return {"message": "Opportunity updated"}
+
+@app.get("/opportunities")
+def get_opportunities(user_id: str = Depends(get_current_user)):
+    result = supabase.table("opportunities").select("*").eq("user_id", user_id).execute()
+    return result.data
+
+@app.post("/visit")
+def create_visit(data: dict, user_id: str = Depends(get_current_user)):
+    supabase.table("visits").insert({
+        "user_id": user_id,
+        "date": data["date"],
+        "customer": data["customer"],
+        "purpose": data["purpose"],
+        "description": data["description"]
+    }).execute()
+    return {"message": "Visit logged"}
+
+@app.put("/visit/{id}")
+def update_visit(id: str, data: dict, user_id: str = Depends(get_current_user)):
+    supabase.table("visits").update(data).eq("id", id).eq("user_id", user_id).execute()
+    return {"message": "Visit updated"}
+
+@app.get("/visits")
+def get_visits(user_id: str = Depends(get_current_user)):
+    result = supabase.table("visits").select("*").eq("user_id", user_id).execute()
+    return result.data
 # class CreateUserRequest(BaseModel):
 #     email: str
 #     password: str
