@@ -84,53 +84,53 @@ async def login(request: LoginRequest):
         return {"success": False, "message": "Invalid credentials"}
 
 
-class CreateUserRequest(BaseModel):
-    email: str
-    password: str
-    name: str       # 👈 Add this
-    role: str
-    admin_token: str
+# class CreateUserRequest(BaseModel):
+#     email: str
+#     password: str
+#     name: str       # 👈 Add this
+#     role: str
+#     admin_token: str
 
-@app.post("/create-user")
-def create_user(req: CreateUserRequest):
-    if req.admin_token != "letmeinadmin":
-        return {"error": "Unauthorized"}
+# @app.post("/create-user")
+# def create_user(req: CreateUserRequest):
+#     if req.admin_token != "letmeinadmin":
+#         return {"error": "Unauthorized"}
 
-    # Step 1: Create auth user
-    auth_url = f"{url}/auth/v1/admin/users"
-    headers = {
-        "apikey": key,
-        "Authorization": f"Bearer {key}",
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "email": req.email,
-        "password": req.password,
-        "name": req.name,
-        "email_confirm": True
-    }
+#     # Step 1: Create auth user
+#     auth_url = f"{url}/auth/v1/admin/users"
+#     headers = {
+#         "apikey": key,
+#         "Authorization": f"Bearer {key}",
+#         "Content-Type": "application/json",
+#     }
+#     payload = {
+#         "email": req.email,
+#         "password": req.password,
+#         "name": req.name,
+#         "email_confirm": True
+#     }
 
-    auth_res = requests.post(auth_url, json=payload, headers=headers)
-    if auth_res.status_code != 200:
-        return {"error": "Failed to create auth user", "details": auth_res.json()}
+#     auth_res = requests.post(auth_url, json=payload, headers=headers)
+#     if auth_res.status_code != 200:
+#         return {"error": "Failed to create auth user", "details": auth_res.json()}
 
-    user_id = auth_res.json().get("user", {}).get("id")
+#     user_id = auth_res.json().get("user", {}).get("id")
 
-    # Step 2: Insert into your users table with UID
-    insert_url = f"{url}/rest/v1/users"
-    insert_headers = headers.copy()
-    insert_headers["Prefer"] = "return=minimal"
+#     # Step 2: Insert into your users table with UID
+#     insert_url = f"{url}/rest/v1/users"
+#     insert_headers = headers.copy()
+#     insert_headers["Prefer"] = "return=minimal"
 
-    data = {
-        "id": user_id,  # assuming your users table has a 'id' column as FK
-        "email": req.email,
-        "role": req.role,
-        "name": req.name,
-    }
+#     data = {
+#         "id": user_id,  # assuming your users table has a 'id' column as FK
+#         "email": req.email,
+#         "role": req.role,
+#         "name": req.name,
+#     }
 
-    insert_res = requests.post(insert_url, json=data, headers=insert_headers)
-    if insert_res.status_code != 201:
-        return {"error": "Failed to insert into users table", "details": insert_res.text}
+#     insert_res = requests.post(insert_url, json=data, headers=insert_headers)
+#     if insert_res.status_code != 201:
+#         return {"error": "Failed to insert into users table", "details": insert_res.text}
 
-    return {"success": True}
+#     return {"success": True}
 
