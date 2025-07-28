@@ -1,12 +1,10 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import os
-import requests
-from fastapi import Depends
 from supabase import create_client, Client
-from datetime import datetime
+from typing import Optional
 
 load_dotenv()
 
@@ -14,7 +12,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Or your frontend URL
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,107 +23,127 @@ url: str = os.getenv("SUPABASE_URL")
 key: str = os.getenv("SUPABASE_SERVICE_ROLE")
 supabase: Client = create_client(url, key)
 
-
 @app.get("/")
 def root():
     return {"message": "Backend running"}
 
-@app.get("/semiconductor-info")
-def get_info():
-    return {"text": "Semiconductors are the foundation of modern electronics and computing."}
-
-# Feedback model
-class Feedback(BaseModel):
-    user_email: str
-    message: str
-
-@app.post("/feedback")
-def post_feedback(feedback: Feedback):
-    data = {
-        "user_email": feedback.user_email,
-        "message": feedback.message
-    }
-    response = supabase.table("feedbacks").insert(data).execute()
-    return {"status": "success", "data": response.data}
-
-#visit model
-
-class Visit(BaseModel):
-    user_email: str
-    customer_name: str
-    visit_date: str  # Format: YYYY-MM-DD
-    purpose: str
-    notes: str
-
-@app.post("/visits")
-def add_visit(visit: Visit):
-    data = {
-        "user_email": visit.user_email,
-        "customer_name": visit.customer_name,
-        "visit_date": visit.visit_date,
-        "purpose": visit.purpose,
-        "notes": visit.notes
-    }
-    response = supabase.table("visits").insert(data).execute()
-    return {"status": "success", "data": response.data}
+# -------------------------
+# AUTH AND DEPENDENCIES
+# -------------------------
 
 class LoginRequest(BaseModel):
     email: str
     password: str
 
-@app.post("/login")
-async def login(request: LoginRequest):
-    response = supabase.table("users").select("*") \
-        .eq("email", request.email).eq("password", request.password).execute()
+def get_current_user(request: Request):
+    email = request.headers.get("x-user-email")
+    if not email:
+        raise HTTPException(status_code=401, detail="User email header missing")
+    
+    response = supabase.table("users").select("*").eq("email", email).single().execute()
+    user = response.data
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    
+    return user
 
+@app.post("/login")
+def login(req: LoginRequest):
+    response = supabase.table("users").select("*").eq("email", req.email).eq("password", req.password).execute()
     if response.data and len(response.data) > 0:
         user = response.data[0]
         return {"success": True, "user": user}
     else:
         return {"success": False, "message": "Invalid credentials"}
 
+# -------------------------
+# OPPORTUNITIES
+# -------------------------
+
+class Opportunity(BaseModel):
+    customer: str
+    description: str
+    notes: str
+    stage: int
+
 @app.post("/opportunity")
-def create_opportunity(data: dict, user_id: str = Depends(get_current_user)):
+def create_opportunity(op: Opportunity, user=Depends(get_current_user)):
     supabase.table("opportunities").insert({
-        "user_id": user_id,
-        "customer": data["customer"],
-        "description": data["description"],
-        "notes": data["notes"],
-        "stage": data["stage"]
+        "user_id": user["id"],
+        "customer": op.customer,
+        "description": op.description,
+        "notes": op.notes,
+        "stage": op.stage
     }).execute()
     return {"message": "Opportunity created"}
 
-
 @app.put("/opportunity/{id}")
-def update_opportunity(id: str, data: dict, user_id: str = Depends(get_current_user)):
-    supabase.table("opportunities").update(data).eq("id", id).eq("user_id", user_id).execute()
+def update_opportunity(id: str, op: Opportunity, user=Depends(get_current_user)):
+    supabase.table("opportunities").update({
+        "customer": op.customer,
+        "description": op.description,
+        "notes": op.notes,
+        "stage": op.stage
+    }).eq("id", id).eq("user_id", user["id"]).execute()
     return {"message": "Opportunity updated"}
 
 @app.get("/opportunities")
-def get_opportunities(user_id: str = Depends(get_current_user)):
-    result = supabase.table("opportunities").select("*").eq("user_id", user_id).execute()
+def get_opportunities(user=Depends(get_current_user)):
+    result = supabase.table("opportunities").select("*").eq("user_id", user["id"]).execute()
     return result.data
 
+# -------------------------
+# VISITS
+# -------------------------
+
+class Visit(BaseModel):
+    date: str
+    customer: str
+    purpose: str
+    description: str
+
 @app.post("/visit")
-def create_visit(data: dict, user_id: str = Depends(get_current_user)):
+def create_visit(visit: Visit, user=Depends(get_current_user)):
     supabase.table("visits").insert({
-        "user_id": user_id,
-        "date": data["date"],
-        "customer": data["customer"],
-        "purpose": data["purpose"],
-        "description": data["description"]
+        "user_id": user["id"],
+        "date": visit.date,
+        "customer": visit.customer,
+        "purpose": visit.purpose,
+        "description": visit.description
     }).execute()
     return {"message": "Visit logged"}
 
 @app.put("/visit/{id}")
-def update_visit(id: str, data: dict, user_id: str = Depends(get_current_user)):
-    supabase.table("visits").update(data).eq("id", id).eq("user_id", user_id).execute()
+def update_visit(id: str, visit: Visit, user=Depends(get_current_user)):
+    supabase.table("visits").update({
+        "date": visit.date,
+        "customer": visit.customer,
+        "purpose": visit.purpose,
+        "description": visit.description
+    }).eq("id", id).eq("user_id", user["id"]).execute()
     return {"message": "Visit updated"}
 
 @app.get("/visits")
-def get_visits(user_id: str = Depends(get_current_user)):
-    result = supabase.table("visits").select("*").eq("user_id", user_id).execute()
+def get_visits(user=Depends(get_current_user)):
+    result = supabase.table("visits").select("*").eq("user_id", user["id"]).execute()
     return result.data
+
+# -------------------------
+# FEEDBACK (optional)
+# -------------------------
+
+class Feedback(BaseModel):
+    user_email: str
+    message: str
+
+@app.post("/feedback")
+def post_feedback(feedback: Feedback):
+    response = supabase.table("feedbacks").insert({
+        "user_email": feedback.user_email,
+        "message": feedback.message
+    }).execute()
+    return {"status": "success", "data": response.data}
+
 # class CreateUserRequest(BaseModel):
 #     email: str
 #     password: str
