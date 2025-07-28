@@ -68,6 +68,22 @@ def add_visit(visit: Visit):
     response = supabase.table("visits").insert(data).execute()
     return {"status": "success", "data": response.data}
 
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+@app.post("/login")
+async def login(request: LoginRequest):
+    response = supabase.table("users").select("*") \
+        .eq("email", request.email).eq("password", request.password).execute()
+
+    if response.data and len(response.data) > 0:
+        user = response.data[0]
+        return {"success": True, "user": user}
+    else:
+        return {"success": False, "message": "Invalid credentials"}
+
+
 class CreateUserRequest(BaseModel):
     email: str
     password: str
