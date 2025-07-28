@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 import os
 import requests
+from fastapi import Depends
 from supabase import create_client, Client
 from datetime import datetime
 
