@@ -92,7 +92,7 @@ def get_opportunities(user=Depends(get_current_user)):
     result = (
         supabase
         .table("opportunities")
-        .select("id, project, stage, description, notes, customers(name)")
+        .select("id, project, stage, description, notes, customer(name)")
         .eq("user_id", user["id"])
         .execute()
     )
@@ -200,5 +200,6 @@ def post_feedback(feedback: Feedback):
 #         return {"error": "Failed to insert into users table", "details": insert_res.text}
 
 #     return {"success": True}
+
 
 
