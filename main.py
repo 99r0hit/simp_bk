@@ -89,7 +89,13 @@ def update_opportunity(id: str, op: Opportunity, user=Depends(get_current_user))
 
 @app.get("/opportunities")
 def get_opportunities(user=Depends(get_current_user)):
-    result = supabase.table("opportunities").select("*").eq("user_id", user["id"]).execute()
+   result = (
+        supabase
+        .table("opportunities")
+        .select("id, project, stage, description, notes, customer(name)")
+        .eq("user_id", user["id"])
+        .execute()
+    )
     return result.data
 
 # -------------------------
@@ -193,4 +199,5 @@ def post_feedback(feedback: Feedback):
 #         return {"error": "Failed to insert into users table", "details": insert_res.text}
 
 #     return {"success": True}
+
 
