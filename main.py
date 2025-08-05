@@ -89,14 +89,15 @@ def update_opportunity(id: str, op: Opportunity, user=Depends(get_current_user))
 
 @app.get("/opportunities")
 def get_opportunities(user=Depends(get_current_user)):
-   result = (
+    result = (
         supabase
         .table("opportunities")
-        .select("id, project, stage, description, notes, customer(name)")
+        .select("id, project, stage, description, notes, customers(name)")
         .eq("user_id", user["id"])
         .execute()
     )
     return result.data
+
 
 # -------------------------
 # VISITS
