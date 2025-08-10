@@ -133,8 +133,15 @@ def update_visit(id: str, visits: Visits, user=Depends(get_current_user)):
 
 @app.get("/visits")
 def get_visits(user=Depends(get_current_user)):
-    result = supabase.table("visits").select("*").eq("user_id", user["id"]).execute()
+    result = (
+        supabase
+        .table("visits")
+        .select("id, date, location, purpose, notes, customer(name)")
+        .eq("user_id", user["id"])
+        .execute()
+    )
     return result.data
+
 
 # -------------------------
 # FEEDBACK (optional)
@@ -201,6 +208,7 @@ def post_feedback(feedback: Feedback):
 #         return {"error": "Failed to insert into users table", "details": insert_res.text}
 
 #     return {"success": True}
+
 
 
 
