@@ -109,7 +109,7 @@ class Visit(BaseModel):
     purpose: str
     description: str
 
-@app.post("/visit")
+@app.post("/visits")
 def create_visit(visit: Visit, user=Depends(get_current_user)):
     supabase.table("visits").insert({
         "user_id": user["id"],
@@ -120,7 +120,7 @@ def create_visit(visit: Visit, user=Depends(get_current_user)):
     }).execute()
     return {"message": "Visit logged"}
 
-@app.put("/visit/{id}")
+@app.put("/visits/{id}")
 def update_visit(id: str, visit: Visit, user=Depends(get_current_user)):
     supabase.table("visits").update({
         "date": visit.date,
@@ -200,6 +200,7 @@ def post_feedback(feedback: Feedback):
 #         return {"error": "Failed to insert into users table", "details": insert_res.text}
 
 #     return {"success": True}
+
 
 
 
