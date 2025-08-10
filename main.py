@@ -103,30 +103,31 @@ def get_opportunities(user=Depends(get_current_user)):
 # VISITS
 # -------------------------
 
-class Visit(BaseModel):
+class Visits(BaseModel):
     date: str
     customer: str
     purpose: str
-    description: str
+    notes: str
+    location: str
 
 @app.post("/visits")
-def create_visit(visit: Visit, user=Depends(get_current_user)):
+def create_visit(visits: Visits, user=Depends(get_current_user)):
     supabase.table("visits").insert({
         "user_id": user["id"],
-        "date": visit.date,
-        "customer": visit.customer,
-        "purpose": visit.purpose,
-        "description": visit.description
+        "date": visits.date,
+        "customer": visits.customer,
+        "purpose": visits.purpose,
+        "notes": visits.notes
     }).execute()
     return {"message": "Visit logged"}
 
 @app.put("/visits/{id}")
-def update_visit(id: str, visit: Visit, user=Depends(get_current_user)):
+def update_visit(id: str, visits: Visits, user=Depends(get_current_user)):
     supabase.table("visits").update({
-        "date": visit.date,
-        "customer": visit.customer,
-        "purpose": visit.purpose,
-        "description": visit.description
+        "date": visits.date,
+        "customer": visits.customer,
+        "purpose": visits.purpose,
+        "description": visits.description
     }).eq("id", id).eq("user_id", user["id"]).execute()
     return {"message": "Visit updated"}
 
@@ -200,6 +201,7 @@ def post_feedback(feedback: Feedback):
 #         return {"error": "Failed to insert into users table", "details": insert_res.text}
 
 #     return {"success": True}
+
 
 
 
